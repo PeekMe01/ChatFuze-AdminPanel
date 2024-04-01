@@ -30,18 +30,18 @@ const App = () => {
       console.error('Error deleting feedback:', error);
     }
   }
-  const accepted=async(idverificationrequests,imagepath,userid,accepted,closePopup)=>{
+  const accepted=(idverificationrequests,imagepath,userid,accepted,closePopup)=>{
 
     try {
-    const response = await api.post('/Accounts/verify_user', {
+      closePopup();
+    const response =  api.post('/Accounts/verify_user', {
                       idverificationrequests,
                       imagepath,
                       userid,
                       accepted
                   });
-                  setusernotverified(usernotverified.filter((user)=>user.idverificationrequests!==idverificationrequests))
-        console.log(response.data)
-        closePopup();
+      setprobablyverifieduser(probablyverifiedusers.filter((user)=>user.idverificationrequests!==idverificationrequests))
+      console.log(response.data)     
       }catch (error) {
         console.error('Error deleting feedback:', error);
       }
