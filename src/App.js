@@ -69,6 +69,9 @@ const App = () => {
     fetchData();
   }, []);
 
+  const handleImageError = () => {
+    setSelectedUser({ ...selectedUser, imagepath: '' });
+  };
 
   return (
     <>
@@ -86,7 +89,7 @@ const App = () => {
    <div className='content'>
       {option==="home"&&
       <>
-      <div class="table-container">
+      <div className="table-container">
   <table>
     <caption>Summary Statistics:</caption>
     <tr><th></th><th>Total</th></tr>
@@ -147,7 +150,7 @@ const App = () => {
 
       {option==="feedbacks"&&
       <>
-      <div class="table-container">
+      <div className="table-container">
   <table >
     <caption>Feedbacks Messages:</caption>
     <tr>
@@ -196,33 +199,33 @@ const App = () => {
       </>}
    </div>
    <Popup open={selectedUser !== null} onClose={() => setSelectedUser(null)} modal nested>
-  {(close) => (
-    <div style={{ backgroundColor: 'gray', padding: '20px', borderRadius: '8px' }}>
-      <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'white' }} onClick={close}>
-        &times;
-      </button>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#333' }}>User Info</h2>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {selectedUser && (
-          <div style={{ textAlign: 'center' }}>
-            <h3>Username: {selectedUser.username}</h3>
-            <p>Email: {selectedUser.email}</p>
-            <p>Country: {selectedUser.country}</p>
-            <p>Gender: {selectedUser.gender} </p>
-            <p>Date of Birth: {selectedUser.dateOfBirth && selectedUser.dateOfBirth.slice(0, 10)}</p>
-            <img src={require(`../../server/uploads/${selectedUser.imagepath}`)} alt="user-pic" style={{ width: '300px', height: '300px' }} />
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' ,justifyContent:'center'}}>
-             <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, true, close)}>Submit</button>
-             <button style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, false, close)}>Reject</button>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid' }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: '#333' }}>User Info</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {selectedUser && (
+            <div style={{ textAlign: 'left' }}>
+              <p>Username: {selectedUser.username}</p>
+              <p>Email: {selectedUser.email}</p>
+              <p>Country: {selectedUser.country}</p>
+              <p>Gender: {selectedUser.gender} </p>
+              <p>Date of Birth: {selectedUser.dateOfBirth && selectedUser.dateOfBirth.slice(0, 10)}</p>
+              <img src={require(`../../server/uploads/${selectedUser.imagepath}`).default} alt="user-pic" style={{ width: '300px', height: '300px' }} onError={handleImageError}/>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' ,justifyContent:'center'}}>
+              <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, true, close)}>Submit</button>
+              <button style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, false, close)}>Reject</button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
-  )}
-</Popup>
+    )}
+  </Popup>
    </>
   )
 }
