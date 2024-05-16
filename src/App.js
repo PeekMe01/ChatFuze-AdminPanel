@@ -215,7 +215,7 @@ const App = () => {
               <p>Country: {selectedUser.country}</p>
               <p>Gender: {selectedUser.gender} </p>
               <p>Date of Birth: {selectedUser.dateOfBirth && selectedUser.dateOfBirth.slice(0, 10)}</p>
-              <img src={require(`../../server/uploads/${selectedUser.imagepath}`).default} alt="user-pic" style={{ width: '300px', height: '300px' }} onError={handleImageError}/>
+              <img src={selectedUser.imagepath} alt="user-pic" style={{ width: '300px', height: '300px' }} onError={handleImageError}/>
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' ,justifyContent:'center'}}>
               <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, true, close)}>Submit</button>
               <button style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, false, close)}>Reject</button>
