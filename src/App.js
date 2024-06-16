@@ -3,6 +3,11 @@ import api from './Config'
 import './App.css';
 import Popup from 'reactjs-popup';
 import userImage from './user.png';
+import { getStorage, ref, deleteObject } from 'firebase/storage';
+import { storage } from './firebase';
+
+
+
 const App = () => {
   const [option,setOption]=useState('home');
   const [users,setusers]=useState([])
@@ -34,18 +39,38 @@ const App = () => {
 
     try {
       closePopup();
-    const response =  api.post('/Accounts/verify_user', {
-                      idverificationrequests,
-                      imagepath,
-                      userid,
-                      accepted
-                  });
+      const response =  api.post('/Accounts/verify_user', {
+                        idverificationrequests,
+                        imagepath,
+                        userid,
+                        accepted
+                    });
       setprobablyverifieduser(probablyverifiedusers.filter((user)=>user.idverificationrequests!==idverificationrequests))
-      console.log(response.data)     
-      }catch (error) {
-        console.error('Error deleting feedback:', error);
-      }
+      console.log(response.data)  
+      deleteFile(imagepath)
+    }catch (error) {
+      console.error('Error deleting feedback:', error);
     }
+  }
+
+  const deleteFile = async (fileUrl) => {
+    try {
+      // Decode the URL to get the path
+      const decodedUrl = decodeURIComponent(fileUrl);
+      const baseUrl = 'https://firebasestorage.googleapis.com/v0/b/chatfuze-e6658.appspot.com/o/';
+      const filePath = decodedUrl.split(baseUrl)[1].split('?')[0];
+
+      // Create a reference to the file to delete
+      const fileRef = ref(storage, filePath);
+
+      // Delete the file
+      await deleteObject(fileRef);
+      console.log('File deleted successfully');
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -81,7 +106,7 @@ const App = () => {
       </div>
       <ul className="sidebar-menu">
         <li><button className={option === 'home' ? 'bg' : 'bgg'} onClick={() => setOption('home')}>Home</button></li>
-        <li><button className={option === 'users' ? 'bg' : 'bgg'} onClick={() => setOption('users')}>Users</button></li>
+        <li><button className={option === 'users' ? 'bg' : 'bgg'} onClick={() => setOption('users')}>Verifications</button></li>
         <li><button className={option === 'feedbacks' ? 'bg' : 'bgg'} onClick={() => setOption('feedbacks')}>Feedbacks</button></li>
         <li><button className={option === 'reports' ? 'bg' : 'bgg'} onClick={() => setOption('reports')}>Reports</button></li>
       </ul>
