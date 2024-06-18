@@ -8,7 +8,6 @@ import { storage } from './firebase';
 
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { GiftedChat } from 'react-web-gifted-chat';
 
 
 const App = () => {
@@ -18,6 +17,7 @@ const App = () => {
   const [usernotverified,setusernotverified]=useState([])
   const [feedbacks,setfeedbacks]=useState([])
   const [reports,setreports]=useState([])
+  const [handledReports, setHandledReports] = useState([]);
   const[totalRooms,setTotalRooms]=useState();
   const[probablyverifiedusers,setprobablyverifieduser]=useState([]);
 
@@ -108,7 +108,8 @@ const App = () => {
         const response3 = await api.get(`/feedbacks/getallfeedbacks`);
         setfeedbacks(response3.data);
         const response4 = await api.get(`/reports/getallreports`);
-        setreports(response4.data);
+        setreports(response4.data.filter((report) => report.status === 'pending'));
+        setHandledReports(response4.data.filter((report) => report.status !== 'pending'));
         const response5=await api.get(`/Accounts/totalrooms`);
         setTotalRooms(response5.data);
         const response6=await api.get(`/Accounts/getProbablyVerifiedUsers`);
@@ -180,6 +181,45 @@ const App = () => {
     setBanUserPopup(false);
   }
 
+  const handleBanUserFromReport = async (id, reportedid, reportCategory) => {
+    try {
+      const response = await api.post('/accounts/ban_user', {
+        idusers: reportedid,
+        reason: `Due to a recent report, we have decided to ban your account for '${reportCategory}'`
+      });
+
+      const reportToUpdate = reports.find((report) => report.idreports === id);
+
+      if (reportToUpdate) {
+        // Modify the report as needed
+        const updatedReport = {
+          ...reportToUpdate,
+          // Add or modify any properties here
+          status: 'banned' // Example: adding a status property
+        };
+
+        setHandledReports((prevReports) => [
+          ...prevReports,
+          updatedReport
+        ]);
+      }
+      setreports(reports.filter((report) => report.idreports !== id));
+
+      if(response){
+        const response2 = await api.post('/reports/handleReport', {
+          id,
+          newStatus: 'banned'
+        });
+
+        if(response2){
+          toast.success(response2.data.message);
+        }
+      }
+    } catch (error) {
+      toast.error(error.response.data.message?error.response.data.message:error.response.data.error);
+    }
+  }
+
   const handleUnbanUser = async (e) => {
     e.preventDefault();
     try {
@@ -197,6 +237,37 @@ const App = () => {
     setSelectedUser(null);
     setReason('');
     setUnbanUserPopup(false);
+  }
+
+  const handleDismissReport = async (id) => {
+    try {
+      const response = await api.post('/reports/handleReport', {
+        id,
+        newStatus: 'dismissed'
+      });
+
+      if(response){
+        const reportToUpdate = reports.find((report) => report.idreports === id);
+
+        if (reportToUpdate) {
+          // Modify the report as needed
+          const updatedReport = {
+            ...reportToUpdate,
+            // Add or modify any properties here
+            status: 'dismissed' // Example: adding a status property
+          };
+
+          setHandledReports((prevReports) => [
+            ...prevReports,
+            updatedReport
+          ]);
+        }
+        setreports(reports.filter((report) => report.idreports !== id));
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.error);
+    } 
   }
 
   return (
@@ -357,12 +428,33 @@ const App = () => {
         <td>{report.message}</td>
         <td>
           <button className='unban-button' onClick={()=>{setViewChatHistoryPopup(true); setSelectedChatHistory(report.tenmessage); setReporterID(report.reporterid); setReportItem(report)}}>View Chat History</button>
-          <button className='ban-button' onClick={()=>deleteReports(report.idreports)}>Dismiss</button>
-          <button className='ban-button' onClick={()=>deleteReports(report.idreports)}>Ban Reported User</button>
+          <button className='edit-username-button' onClick={()=>handleDismissReport(report.idreports)}>Dismiss</button>
+          <button className='ban-button' onClick={()=>handleBanUserFromReport(report.idreports, report.reportedid, report.categoryname)}>Ban Reported User</button>
         </td>
     </tr>
     ))}
   </table>
+
+    <table >
+      <caption>Handled Reports:</caption>
+      
+      <tr>
+          <th>Reporter Username</th>
+          <th>Reported Username</th>
+          <th>Category Name</th>
+          <th>Reporter Message</th>
+          <th>Action Taken</th>
+      </tr>
+      {handledReports&&handledReports.map((report)=>(
+        <tr>
+          <td>{report.reporterusername}</td>
+          <td>{report.reportedusername}</td>
+          <td>{report.categoryname}</td>
+          <td>{report.message}</td>
+          <td>{report.status}</td>
+      </tr>
+      ))}
+    </table>
   </div>
 
 
@@ -511,7 +603,7 @@ const App = () => {
           }
         </div>
         <div>
-          <h3 style={{ paddingTop: 20 }}>Report Reason: </h3><p>{reportItem.categoryname}</p>
+          <h3 style={{ paddingTop: 20 }}>Report Reason: </h3><p>{reportItem&&reportItem.categoryname}</p>
         </div>
       </div>
     )}
