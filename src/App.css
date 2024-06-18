@@ -135,4 +135,90 @@
     transition: transform 100ms;
 }
 
+.edit-username-button {
+  background-color: #4CAF50; /* Green */
+  width: 100%;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
 
+.delete-profile-picture-button {
+  background-color: #ff9800; /* Orange */
+  width: 100%;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.ban-button {
+  background-color: #f44336; /* Red */
+  width: 100%;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.unban-button {
+  background-color: #007bff; /* Blue color */
+  width: 100%;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.unban-button:hover {
+  background-color: #0056b3; /* Darker blue for hover */
+}
+
+/* Optional: Add hover effects for better UX */
+.edit-username-button:hover {
+  background-color: #45a049;
+}
+
+.delete-profile-picture-button:hover {
+  background-color: #fb8c00;
+}
+
+.ban-button:hover {
+  background-color: #e53935;
+}
+
+.centered-image-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.assignmentPic {
+  max-width: 100%;
+  height: auto;
+}

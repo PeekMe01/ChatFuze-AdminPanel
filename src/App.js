@@ -6,6 +6,9 @@ import userImage from './user.png';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
 
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { GiftedChat } from 'react-web-gifted-chat';
 
 
 const App = () => {
@@ -17,6 +20,30 @@ const App = () => {
   const [reports,setreports]=useState([])
   const[totalRooms,setTotalRooms]=useState();
   const[probablyverifiedusers,setprobablyverifieduser]=useState([]);
+
+  const [verificationPopup, setVerificationPopup] = useState(false);
+  const [editUsernamePopup, setEditUsernamePopup] = useState(false);
+  const [deleteProfilePicPopup, setDeleteProfilePicPopup] = useState(false);
+  const [banUserPopup, setBanUserPopup] = useState(false);
+  const [unbanUserPopup, setUnbanUserPopup] = useState(false);
+  const [username, setUsername] = useState('');
+  const [reason, setReason] = useState('');
+
+  const [viewChatHistoryPopup, setViewChatHistoryPopup] = useState(false);
+  const [selectedChatHistory, setSelectedChatHistory] = useState([])
+  const [reporterID, setReporterID] = useState(null);
+  const [reportItem, setReportItem] = useState(null)
+
+  useEffect(() => {
+    if (selectedUser) {
+      setUsername(selectedUser.username);
+    }
+  }, [selectedUser]);
+
+  const handleInputChange = (event) => {
+    setUsername(event.target.value);
+  };
+
   const deleteFeedback = async (id) => {
     try {
       const response = await api.post(`/feedbacks/deletefeedback`, { id });
@@ -98,15 +125,91 @@ const App = () => {
     setSelectedUser({ ...selectedUser, imagepath: '' });
   };
 
+  const handleSaveNewUsername = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/settings/updateusername', {
+        userid: selectedUser.idusers,
+        username,
+      });
+
+      if(response){
+        toast.success('Username updated successfully!');
+      }
+    } catch (error) {
+      toast.error(error.response.data.error);
+    }
+    setSelectedUser(null)
+    setUsername('');
+    setEditUsernamePopup(false);
+  }
+
+  const handleDeleteProfilePicture = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/accounts/removeprofilepicture', {
+        idusers: selectedUser.idusers,
+      });
+
+      if(response){
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+    setSelectedUser(null)
+    setDeleteProfilePicPopup(false);
+  }
+
+  const handleBanUser = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/accounts/ban_user', {
+        idusers: selectedUser.idusers,
+        reason
+      });
+
+      if(response){
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+    setSelectedUser(null);
+    setReason('');
+    setBanUserPopup(false);
+  }
+
+  const handleUnbanUser = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/accounts/unban_user', {
+        idusers: selectedUser.idusers,
+        reason
+      });
+
+      if(response){
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+    setSelectedUser(null);
+    setReason('');
+    setUnbanUserPopup(false);
+  }
+
   return (
     <>
+    <ToastContainer />
     <div className="sidebar">
       <div className="sidebar-header">
         Admin Panel
       </div>
       <ul className="sidebar-menu">
         <li><button className={option === 'home' ? 'bg' : 'bgg'} onClick={() => setOption('home')}>Home</button></li>
-        <li><button className={option === 'users' ? 'bg' : 'bgg'} onClick={() => setOption('users')}>Verifications</button></li>
+        <li><button className={option === 'users' ? 'bg' : 'bgg'} onClick={() => setOption('users')}>Users</button></li>
+        <li><button className={option === 'verifications' ? 'bg' : 'bgg'} onClick={() => setOption('verifications')}>Verifications</button></li>
         <li><button className={option === 'feedbacks' ? 'bg' : 'bgg'} onClick={() => setOption('feedbacks')}>Feedbacks</button></li>
         <li><button className={option === 'reports' ? 'bg' : 'bgg'} onClick={() => setOption('reports')}>Reports</button></li>
       </ul>
@@ -147,7 +250,7 @@ const App = () => {
 </div>
       
       </>}
-      {option==="users"&&
+      {option==="verifications"&&
      
       <div>
                 <div style={{textAlign:'center'}}>
@@ -158,7 +261,7 @@ const App = () => {
                 <div className='assignmentBox'>
                     {probablyverifiedusers.map((user,index) => (
                         <div className='assignmentItem' key={index}> 
-                            <div className='assignmentImageHolder' onClick={() => setSelectedUser(user)}>
+                            <div className='assignmentImageHolder' onClick={() => {setVerificationPopup(true); setSelectedUser(user)}}>
                                 <img src={userImage} alt='userPic' width={150} height={150} className='assignmentPic'/>
                             </div>
                             <div style={{  paddingTop: 5 ,display:'flex',alignItems:'center',flexDirection:'column'}}>
@@ -171,6 +274,43 @@ const App = () => {
                 </div>
       </div>
 
+      }
+
+      {option==="users"&&  
+        <div>
+          <div style={{textAlign:'center'}}>
+            <h1>Users:</h1>
+          </div>
+          <br/>
+          <hr/>
+          <div style={{ margin: '0 auto', width: '90%'}}>
+            <table style={{ marginTop: 10 }}>
+              <tr>
+                  <th style={{ textAlign: 'center' }}>Username</th>
+                  <th style={{ textAlign: 'center' }}>Email</th>
+                  <th style={{ textAlign: 'center' }}>Profile Picture</th>
+                  <th style={{ textAlign: 'center' }}>Acitons</th>
+              </tr>
+              {users.map((user,index)=>(
+                <tr>
+                  <td>{user.username}</td>
+                  <td>{user.email}</td>
+                  <td className="centered-image-cell">
+                    <img src={user.imageurl ? user.imageurl : userImage} alt='userPic' width={150} height={150} className='assignmentPic'/>
+                  </td>
+                  <td>
+                    <div><button className="edit-username-button" onClick={() => {setEditUsernamePopup(true); setSelectedUser(user)}}>Edit Username</button></div>
+                    <div><button className="delete-profile-picture-button" onClick={() => {setDeleteProfilePicPopup(true); setSelectedUser(user)}}>Delete Profile Picture</button></div>
+                    <div>
+                      {!user.isbanned?<button className="ban-button" onClick={() => {setBanUserPopup(true); setSelectedUser(user)}}>Ban</button>:
+                      <button className="unban-button" onClick={() => {setUnbanUserPopup(true); setSelectedUser(user)}}>Unban</button>}
+                      </div>
+                  </td>
+                </tr>
+              ))}
+            </table>
+          </div>
+        </div>
       }
 
       {option==="feedbacks"&&
@@ -198,16 +338,16 @@ const App = () => {
       </>}
       {option==="reports"&&
       <>
-      
+      <div style={{ margin: '0 auto', width: '90%'}}>
   <table >
-    <caption>Reports Information:</caption>
+    <caption>Reports:</caption>
     
     <tr>
         <th>Reporter Username</th>
         <th>Reported Username</th>
         <th>Category Name</th>
         <th>Reporter Message</th>
-        <th>Delete</th>
+        <th>Actions</th>
     </tr>
     {reports.map((report)=>(
       <tr>
@@ -215,15 +355,20 @@ const App = () => {
         <td>{report.reportedusername}</td>
         <td>{report.categoryname}</td>
         <td>{report.message}</td>
-        <td><button onClick={()=>deleteReports(report.idreports)}>Delete</button></td>
+        <td>
+          <button className='unban-button' onClick={()=>{setViewChatHistoryPopup(true); setSelectedChatHistory(report.tenmessage); setReporterID(report.reporterid); setReportItem(report)}}>View Chat History</button>
+          <button className='ban-button' onClick={()=>deleteReports(report.idreports)}>Dismiss</button>
+          <button className='ban-button' onClick={()=>deleteReports(report.idreports)}>Ban Reported User</button>
+        </td>
     </tr>
     ))}
   </table>
+  </div>
 
 
       </>}
    </div>
-   <Popup open={selectedUser !== null} onClose={() => setSelectedUser(null)} modal nested>
+   <Popup open={verificationPopup} onClose={() => {setVerificationPopup(false); setSelectedUser(null)}} modal nested>
     {(close) => (
       <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid' }}>
         <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
@@ -247,6 +392,126 @@ const App = () => {
               </div>
             </div>
           )}
+        </div>
+      </div>
+    )}
+  </Popup>
+
+  <Popup open={editUsernamePopup} onClose={() => {setEditUsernamePopup(false); setSelectedUser(null); setUsername('')}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: '#333' }}>User Info</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: 10}}>
+            <h3>Username</h3>
+            <input style={{ fontSize: 20 }} value={username} onChange={handleInputChange} />
+            <button className="edit-username-button" onClick={handleSaveNewUsername}>Save</button>
+          </form>
+        </div>
+      </div>
+    )}
+  </Popup>
+
+  <Popup open={deleteProfilePicPopup} onClose={() => {setDeleteProfilePicPopup(false); setSelectedUser(null)}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: 'red' }}>Warning!</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <label>Are you sure you want to delete this user's profile picture?</label>
+            <button className="delete-profile-picture-button" onClick={handleDeleteProfilePicture}>Yes, Delete</button>
+        </div>
+      </div>
+    )}
+  </Popup>
+
+  <Popup open={banUserPopup} onClose={() => {setBanUserPopup(false); setSelectedUser(null); setReason('')}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: 'red' }}>Warning!</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: 10}}>
+            <h3>Reason</h3>
+            <input style={{ fontSize: 20 }} value={reason} onChange={(event)=>{setReason(event.target.value)}} placeholder='Enter reason for ban...'/>
+            <button className="ban-button" onClick={handleBanUser}>Ban</button>
+          </form>
+        </div>
+      </div>
+    )}
+  </Popup>
+  <Popup open={unbanUserPopup} onClose={() => {setUnbanUserPopup(false); setSelectedUser(null); setReason('')}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: 'red' }}>Warning!</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: 10}}>
+            <h3>Reason</h3>
+            <input style={{ fontSize: 20 }} value={reason} onChange={(event)=>{setReason(event.target.value)}} placeholder='Enter reason for unban...'/>
+            <button className="unban-button" onClick={handleUnbanUser}>Unban</button>
+          </form>
+        </div>
+      </div>
+    )}
+  </Popup>
+  <Popup open={viewChatHistoryPopup} onClose={() => {setViewChatHistoryPopup(false); setSelectedChatHistory(null); setReporterID(null)}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250, width: 300, height: 400 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2>Chat History</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'scroll', height: 300 }}>
+          {
+            !selectedChatHistory?<p style={{ textAlign: 'center' }}>No chat history!</p>:selectedChatHistory.length==0?<p>No chat history!</p>:<></>
+          }
+          {
+            selectedChatHistory&&selectedChatHistory.map((message,index) => {
+              return(
+                <div 
+                  key={index} 
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: message.user._id == reporterID ? 'flex-start' : 'flex-end', 
+                    margin: '0 10px' 
+                  }}
+                >
+                  <p style={{ 
+                      color: 'white',
+                      backgroundColor: message.user._id == reporterID ? '#007bff' : '#f44336', 
+                      padding: 5, 
+                      display: 'inline-block',
+                      borderRadius: '5px' // Optional: Adds a slight border radius for better aesthetics
+                    }}>
+                      {message.text}
+                  </p>
+                </div>
+              )
+            })
+          }
+        </div>
+        <div>
+          <h3 style={{ paddingTop: 20 }}>Report Reason: </h3><p>{reportItem.categoryname}</p>
         </div>
       </div>
     )}
