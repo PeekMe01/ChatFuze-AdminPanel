@@ -152,6 +152,7 @@ const handleSaveNewPassword = async (e) => {
     try {
       const response = await api.post('/settings/updatepassword', {
         userid: selectedUser.idusers,
+        email:selectedUser.email,
         password,
 
       });
