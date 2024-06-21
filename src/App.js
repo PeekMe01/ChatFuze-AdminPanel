@@ -5,14 +5,14 @@ import Popup from 'reactjs-popup';
 import userImage from './user.png';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
-
+import debounce from 'lodash.debounce';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 
 const App = () => {
   const [option,setOption]=useState('home');
   const [users,setusers]=useState([])
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [usernotverified,setusernotverified]=useState([])
   const [feedbacks,setfeedbacks]=useState([])
@@ -23,10 +23,12 @@ const App = () => {
 
   const [verificationPopup, setVerificationPopup] = useState(false);
   const [editUsernamePopup, setEditUsernamePopup] = useState(false);
+    const [editPasswordPopup, setEditPasswordPopup] = useState(false);
   const [deleteProfilePicPopup, setDeleteProfilePicPopup] = useState(false);
   const [banUserPopup, setBanUserPopup] = useState(false);
   const [unbanUserPopup, setUnbanUserPopup] = useState(false);
   const [username, setUsername] = useState('');
+  const [password,setPassword]=useState('');
   const [reason, setReason] = useState('');
 
   const [viewChatHistoryPopup, setViewChatHistoryPopup] = useState(false);
@@ -144,6 +146,26 @@ const App = () => {
     setUsername('');
     setEditUsernamePopup(false);
   }
+
+const handleSaveNewPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/settings/updatepassword', {
+        userid: selectedUser.idusers,
+        password,
+
+      });
+      if(response){
+        toast.success('password updated successfully!');
+      }
+    } catch (error) {
+      toast.error(error.response.data.error);
+    }
+    setSelectedUser(null)
+    setEditPasswordPopup(false);
+  }
+
+
 
   const handleDeleteProfilePicture = async (e) => {
     e.preventDefault();
@@ -269,7 +291,9 @@ const App = () => {
       toast.error(error.response.data.error);
     } 
   }
-
+  const getFilteredUsers = () => {
+    return users.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+  };
   return (
     <>
     <ToastContainer />
@@ -351,9 +375,31 @@ const App = () => {
         <div>
           <div style={{textAlign:'center'}}>
             <h1>Users:</h1>
+           
           </div>
-          <br/>
           <hr/>
+          <div style={{display:'flex',justifyContent:'center'}}>
+          <input
+  type="text"
+  placeholder="Search by username"
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  style={{
+   
+    marginBottom: '5px',
+    marginTop: '5px',
+    padding: '12px 20px',
+    fontSize: '18px',
+    border: '2px solid #ccc',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    outline: 'none',
+    transition: 'border-color 0.3s ease-in-out',
+  }}
+  onFocus={(e) => e.target.style.borderColor = '#007BFF'}
+  onBlur={(e) => e.target.style.borderColor = '#ccc'}
+/>
+</div>
           <div style={{ margin: '0 auto', width: '90%'}}>
             <table style={{ marginTop: 10 }}>
               <tr>
@@ -362,7 +408,7 @@ const App = () => {
                   <th style={{ textAlign: 'center' }}>Profile Picture</th>
                   <th style={{ textAlign: 'center' }}>Acitons</th>
               </tr>
-              {users.map((user,index)=>(
+              {getFilteredUsers().map((user,index)=>(
                 <tr>
                   <td>{user.username}</td>
                   <td>{user.email}</td>
@@ -371,6 +417,7 @@ const App = () => {
                   </td>
                   <td>
                     <div><button className="edit-username-button" onClick={() => {setEditUsernamePopup(true); setSelectedUser(user)}}>Edit Username</button></div>
+                     <div><button className="edit-username-button" onClick={() => {setEditPasswordPopup(true); setSelectedUser(user)}}>Edit Password</button></div>
                     <div><button className="delete-profile-picture-button" onClick={() => {setDeleteProfilePicPopup(true); setSelectedUser(user)}}>Delete Profile Picture</button></div>
                     <div>
                       {!user.isbanned?<button className="ban-button" onClick={() => {setBanUserPopup(true); setSelectedUser(user)}}>Ban</button>:
@@ -508,6 +555,28 @@ const App = () => {
       </div>
     )}
   </Popup>
+
+<Popup open={editPasswordPopup} onClose={() => {setEditPasswordPopup(false)  ; setSelectedUser(null); setPassword('')}} modal nested>
+    {(close) => (
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px black solid', marginLeft: 250 }}>
+        <button style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'black' }} onClick={close}>
+          &times;
+        </button>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: '#333' }}>User Info</h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: 10}}>
+            <h3>Password</h3>
+            <input style={{ fontSize: 20 }} placeholder='Change User Password' value={password} onChange={(e)=>setPassword(e.target.value)} />
+            <button className="edit-username-button" onClick={handleSaveNewPassword}>Save</button>
+          </form>
+        </div>
+      </div>
+    )}
+  </Popup>
+
+
 
   <Popup open={deleteProfilePicPopup} onClose={() => {setDeleteProfilePicPopup(false); setSelectedUser(null)}} modal nested>
     {(close) => (
