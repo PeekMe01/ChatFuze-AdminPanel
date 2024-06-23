@@ -179,6 +179,11 @@ const handleSaveNewPassword = async (e) => {
       });
 
       if(response){
+        setusers(prevUsers =>
+          prevUsers.map(user =>
+            user.idusers === selectedUser.idusers ? { ...user, imageurl: null} : user
+          )
+        );
         toast.success(response.data.message);
       }
     } catch (error) {
@@ -199,7 +204,7 @@ const handleSaveNewPassword = async (e) => {
       if(response){
         setusers(prevUsers =>
           prevUsers.map(user =>
-            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned } : user
+            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned, imageurl: 'https://firebasestorage.googleapis.com/v0/b/chatfuze-e6658.appspot.com/o/ChatFuze%2FProfile%2Fbanned_user_pfp.png?alt=media&token=d56fc241-27f5-4e66-a403-a6eef744b350' } : user
           )
         );
         toast.success(response.data.message);
@@ -241,6 +246,11 @@ const handleSaveNewPassword = async (e) => {
           id,
           newStatus: 'banned'
         });
+        setusers(prevUsers =>
+          prevUsers.map(user =>
+            user.idusers === reportedid ? { ...user, isbanned:true, imageurl: 'https://firebasestorage.googleapis.com/v0/b/chatfuze-e6658.appspot.com/o/ChatFuze%2FProfile%2Fbanned_user_pfp.png?alt=media&token=d56fc241-27f5-4e66-a403-a6eef744b350' } : user
+          )
+        );
         if(response2){
           toast.success(response2.data.message);
         }
@@ -261,7 +271,7 @@ const handleSaveNewPassword = async (e) => {
       if(response){
         setusers(prevUsers =>
           prevUsers.map(user =>
-            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned } : user
+            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned , imageurl: null} : user
           )
         );
         toast.success(response.data.message);
