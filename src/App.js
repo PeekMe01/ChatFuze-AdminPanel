@@ -669,7 +669,7 @@ const handleSaveNewPassword = async (e) => {
                   key={index} 
                   style={{ 
                     display: 'flex', 
-                    justifyContent: message.user._id == reporterID ? 'flex-start' : 'flex-end', 
+                    justifyContent: message.user._id == reporterID ? 'flex-end' : 'flex-start', 
                     margin: '0 10px' 
                   }}
                 >
