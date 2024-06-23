@@ -5,7 +5,6 @@ import Popup from 'reactjs-popup';
 import userImage from './user.png';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
-import debounce from 'lodash.debounce';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,10 +19,9 @@ const App = () => {
   const [handledReports, setHandledReports] = useState([]);
   const[totalRooms,setTotalRooms]=useState();
   const[probablyverifiedusers,setprobablyverifieduser]=useState([]);
-
   const [verificationPopup, setVerificationPopup] = useState(false);
   const [editUsernamePopup, setEditUsernamePopup] = useState(false);
-    const [editPasswordPopup, setEditPasswordPopup] = useState(false);
+  const [editPasswordPopup, setEditPasswordPopup] = useState(false);
   const [deleteProfilePicPopup, setDeleteProfilePicPopup] = useState(false);
   const [banUserPopup, setBanUserPopup] = useState(false);
   const [unbanUserPopup, setUnbanUserPopup] = useState(false);
@@ -137,6 +135,11 @@ const App = () => {
       });
 
       if(response){
+        setusers(prevUsers =>
+          prevUsers.map(user =>
+            user.idusers === selectedUser.idusers ? { ...user, username } : user
+          )
+        );
         toast.success('Username updated successfully!');
       }
     } catch (error) {
@@ -194,6 +197,11 @@ const handleSaveNewPassword = async (e) => {
       });
 
       if(response){
+        setusers(prevUsers =>
+          prevUsers.map(user =>
+            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned } : user
+          )
+        );
         toast.success(response.data.message);
       }
     } catch (error) {
@@ -233,7 +241,6 @@ const handleSaveNewPassword = async (e) => {
           id,
           newStatus: 'banned'
         });
-
         if(response2){
           toast.success(response2.data.message);
         }
@@ -252,6 +259,11 @@ const handleSaveNewPassword = async (e) => {
       });
 
       if(response){
+        setusers(prevUsers =>
+          prevUsers.map(user =>
+            user.idusers === selectedUser.idusers ? { ...user, isbanned:!selectedUser.isbanned } : user
+          )
+        );
         toast.success(response.data.message);
       }
     } catch (error) {
@@ -334,6 +346,10 @@ const handleSaveNewPassword = async (e) => {
       <td>{usernotverified.length}</td>
     </tr>
     <tr>
+      <td> Verification Requests</td>
+      <td>{probablyverifiedusers.length}</td>
+    </tr>
+    <tr>
       <td> Feedbacks</td>
       <td>{feedbacks.length}</td>
     </tr>
@@ -341,7 +357,6 @@ const handleSaveNewPassword = async (e) => {
       <td> Reports</td>
       <td>{reports.length}</td>
     </tr>
-    
   </table>
 </div>
       
@@ -350,7 +365,7 @@ const handleSaveNewPassword = async (e) => {
      
       <div>
                 <div style={{textAlign:'center'}}>
-                      <h1>Users Not Verified:</h1>
+                      <h1>Users Verification Requests ({probablyverifiedusers.length}):</h1>
                 </div>
                 <br/>
                 <hr/>
@@ -375,7 +390,7 @@ const handleSaveNewPassword = async (e) => {
       {option==="users"&&  
         <div>
           <div style={{textAlign:'center'}}>
-            <h1>Users:</h1>
+            <h1>Users ({users.length}):</h1>
            
           </div>
           <hr/>
@@ -436,7 +451,7 @@ const handleSaveNewPassword = async (e) => {
       <>
       <div className="table-container">
   <table >
-    <caption>Feedbacks Messages:</caption>
+    <caption>Feedbacks Messages ({feedbacks.length}):</caption>
     <tr>
         <th>Username</th>
         <th>Email</th>
@@ -459,7 +474,7 @@ const handleSaveNewPassword = async (e) => {
       <>
       <div style={{ margin: '0 auto', width: '90%'}}>
   <table >
-    <caption>Reports:</caption>
+    <caption>Reports ({reports.length}):</caption>
     
     <tr>
         <th>Reporter Username</th>
@@ -484,7 +499,7 @@ const handleSaveNewPassword = async (e) => {
   </table>
 
     <table >
-      <caption>Handled Reports:</caption>
+      <caption>Handled Reports ({handledReports.length}):</caption>
       
       <tr>
           <th>Reporter Username</th>
@@ -527,7 +542,7 @@ const handleSaveNewPassword = async (e) => {
               <p>Date of Birth: {selectedUser.dateOfBirth && selectedUser.dateOfBirth.slice(0, 10)}</p>
               <img src={selectedUser.imagepath} alt="user-pic" style={{ width: '300px', height: '300px' }} onError={handleImageError}/>
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' ,justifyContent:'center'}}>
-              <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, true, close)}>Submit</button>
+              <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, true, close)}>Accept</button>
               <button style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={() => accepted(selectedUser.idverificationrequests, selectedUser.imagepath, selectedUser.userid, false, close)}>Reject</button>
               </div>
             </div>
